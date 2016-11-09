@@ -1,4 +1,4 @@
-# Custom Require
+# Watcher Require
 
 With this module you will receive a callback when a module or its dependencies are modified.
 
@@ -45,7 +45,7 @@ watcherRequire.require("./test");
 watcherRequire.require("./test2");
 
 // You can create different Watcher Require instances together in the same script
-var secondWatcher = new CustomRequire(function() {
+var secondWatcher = new WatcherRequire(function() {
     console.log("Second watcher");
 });
 

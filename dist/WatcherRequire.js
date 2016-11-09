@@ -16,23 +16,36 @@ var WatcherRequire = (function (_super) {
         });
         this._watcherTimeout = null;
         this._watcherList = {};
-        this._watcherMethods = ["add", "change", "unlink"];
         this._watcherDelayed = {};
         if (!options) {
             options = {
                 delay: 300,
-                persistent: true
+                persistent: true,
+                methods: {
+                    add: true,
+                    change: true,
+                    unlink: true
+                }
             };
         }
-        else if (options.delay == null || !isFinite(options.delay)) {
+        if (options.delay == null || !isFinite(options.delay)) {
             options.delay = 300;
+        }
+        if (!options.methods) {
+            options.methods = {
+                add: true,
+                change: true,
+                unlink: true
+            };
         }
         this._watcher = chokidar.watch([], {
             persistent: options.persistent
         });
-        for (var i = 0; i < this._watcherMethods.length; i++) {
-            this._watcherDelayed[this._watcherMethods[i]] = [];
-            this._watcher.on(this._watcherMethods[i], this._watcherNotify.bind(this, this._watcherMethods[i]));
+        for (var i in options.methods) {
+            if (options.methods.hasOwnProperty(i) && options.methods[i]) {
+                this._watcherDelayed[i] = [];
+                this._watcher.on(i, this._watcherNotify.bind(this, i));
+            }
         }
         this._watcherOptions = options;
         this._watcherCallback = callback;
@@ -47,9 +60,11 @@ var WatcherRequire = (function (_super) {
             this._watcherTimeout = setTimeout(function () {
                 _this._watcherTimeout = null;
                 var callback = {};
-                for (var i = 0; i < _this._watcherMethods.length; i++) {
-                    callback[_this._watcherMethods[i]] = _this._watcherDelayed[_this._watcherMethods[i]];
-                    _this._watcherDelayed[_this._watcherMethods[i]] = [];
+                for (var i in _this._watcherOptions.methods) {
+                    if (_this._watcherOptions.methods.hasOwnProperty(i) && _this._watcherOptions.methods[i]) {
+                        callback[i] = _this._watcherDelayed[i];
+                        _this._watcherDelayed[i] = [];
+                    }
                 }
                 _this._watcherCallback(callback);
             }, this._watcherOptions.delay);

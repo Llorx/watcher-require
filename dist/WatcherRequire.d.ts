@@ -5,6 +5,11 @@ import { FSWatcher } from "fs";
 export interface WatcherOptions {
     delay?: number;
     persistent?: boolean;
+    methods?: {
+        add: boolean;
+        change: boolean;
+        unlink: boolean;
+    };
 }
 export interface WatcherCallback {
     add?: NodeModule[];
@@ -19,7 +24,6 @@ export declare class WatcherRequire extends CustomRequire {
     _watcherList: {
         [file: string]: NodeModule;
     };
-    _watcherMethods: string[];
     _watcherDelayed: {
         [type: string]: NodeModule[];
     };

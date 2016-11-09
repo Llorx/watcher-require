@@ -29,12 +29,13 @@ var WatcherRequire = require("watcher-require").WatcherRequire;
 // If you are using TypeScript, you can use import
 import { WatcherRequire } from "watcher-require";
 
-// Instantiate an object with a callback that will be called at loading time and each time a module has changed
-var watcherRequire = new WatcherRequire(function() {
+// Instantiate an object with a callback that will be called with all the new changes
+var watcherRequire = new WatcherRequire(function(changes) {
     console.log("Something has changed! decache and reload!");
+    console.log(changes.add, changes.changed, changes.unlink);
 }, {
-    delay: 300, // The callbacks will not be made instantly, just in case multiple files have changed. You will receive one callback per each bunch of files changed
-    persistent: true // Keep the process open watching files
+    delay: 300, // The callback will not be called instantly. You will receive one callback per each bunch of files changed
+    persistent: true // Keep the process open, watching files
 });
 
 // Require a module to start watching

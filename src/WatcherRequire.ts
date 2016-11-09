@@ -7,14 +7,24 @@ export interface WatcherOptions {
     persistent?:boolean;
 }
 
+export interface WatcherCallback {
+    add?:NodeModule[];
+    change?:NodeModule[];
+    unlink?:NodeModule[];
+}
+
 export class WatcherRequire extends CustomRequire {
     _watcherOptions:WatcherOptions;
-    _watcherCallback:()=>void;
-    _watcherTimeout:NodeJS.Timer;
+    _watcherCallback:(changes:WatcherCallback)=>void;
+    _watcherTimeout:NodeJS.Timer = null;
     _watcher:FSWatcher;
-    constructor(callback:()=>void, options:WatcherOptions) {
-        super((module:NodeModule) => {
-            this._watcher.add(module.filename);
+    _watcherList:{[file:string]: NodeModule} = {};
+    _watcherMethods = ["add", "change", "unlink"];
+    _watcherDelayed:{[type:string]: NodeModule[]} = {};
+    constructor(callback:(changes?:WatcherCallback)=>void, options?:WatcherOptions) {
+        super((mod:NodeModule) => {
+            this._watcherList[mod.filename] = mod;
+            this._watcher.add(mod.filename);
         });
         if (!options) {
             options = {
@@ -26,20 +36,37 @@ export class WatcherRequire extends CustomRequire {
         }
         this._watcher = chokidar.watch([], {
             persistent: options.persistent
-        })
-        .on("add", this._watcherNotify.bind(this))
-        .on("change", this._watcherNotify.bind(this))
-        .on("unlink", this._watcherNotify.bind(this));
+        });
+        for (var i = 0; i < this._watcherMethods.length; i++) {
+            this._watcherDelayed[this._watcherMethods[i]] = [];
+            this._watcher.on(this._watcherMethods[i], this._watcherNotify.bind(this, this._watcherMethods[i]));
+        }
         this._watcherOptions = options;
         this._watcherCallback = callback;
     }
-    _watcherNotify() {
-        clearTimeout(this._watcherTimeout);
-        this._watcherTimeout = setTimeout(this._watcherCallback, this._watcherOptions.delay);
+    _watcherNotify(method:string, path:string) {
+        var mod = this._watcherList[path];
+        if (this._watcherDelayed[method].indexOf(mod) < 0) {
+            this._watcherDelayed[method].push(mod);
+        }
+        if (this._watcherTimeout == null) {
+            this._watcherTimeout = setTimeout(() => {
+                this._watcherTimeout = null;
+                var callback:WatcherCallback = {};
+                for (var i = 0; i < this._watcherMethods.length; i++) {
+                    callback[this._watcherMethods[i]] = this._watcherDelayed[this._watcherMethods[i]];
+                    this._watcherDelayed[this._watcherMethods[i]] = [];
+                }
+                this._watcherCallback(callback);
+            }, this._watcherOptions.delay);
+        }
     }
     dispose() {
         super.dispose();
         this._watcher.close();
         clearTimeout(this._watcherTimeout);
+        this._watcherTimeout = null;
+        this._watcherList = {};
+        this._watcherDelayed = {};
     }
 }

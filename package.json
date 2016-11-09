@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "chokidar": "^1.6.1",
-    "custom-require": "^0.0.12"
+    "custom-require": "^0.0.13"
   },
   "description": "Require a module and receive a callback each time the module or one of his dependencies has been modified",
   "keywords": [

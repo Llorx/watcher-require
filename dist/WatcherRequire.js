@@ -58,9 +58,8 @@ var WatcherRequire = (function (_super) {
     }
     WatcherRequire.prototype._watcherNotify = function (method, path) {
         var _this = this;
-        var mod = this._watcherList[path];
-        if (this._watcherDelayed[method].indexOf(mod) < 0) {
-            this._watcherDelayed[method].push(mod);
+        if (this._watcherDelayed[method].indexOf(path) < 0) {
+            this._watcherDelayed[method].push(path);
         }
         if (this._watcherTimeout == null) {
             this._watcherTimeout = setTimeout(function () {
@@ -69,6 +68,9 @@ var WatcherRequire = (function (_super) {
                 for (var i in _this._watcherOptions.methods) {
                     if (_this._watcherOptions.methods.hasOwnProperty(i) && _this._watcherOptions.methods[i]) {
                         callback[i] = _this._watcherDelayed[i];
+                        for (var ii = 0; ii < callback[i].length; ii++) {
+                            callback[i][ii] = _this._watcherList[callback[i][ii]];
+                        }
                         _this._watcherDelayed[i] = [];
                     }
                 }

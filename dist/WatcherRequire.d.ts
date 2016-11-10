@@ -26,7 +26,7 @@ export declare class WatcherRequire extends CustomRequire {
         [file: string]: CustomNodeModule;
     };
     _watcherDelayed: {
-        [type: string]: CustomNodeModule[];
+        [type: string]: string[];
     };
     constructor(callback: (changes?: WatcherCallback) => void, options?: WatcherOptions);
     _watcherNotify(method: string, path: string): void;

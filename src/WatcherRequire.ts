@@ -1,6 +1,8 @@
-import { CustomRequire } from "custom-require";
+import { CustomRequire, CustomNodeModule } from "custom-require";
 import * as chokidar from "chokidar";
 import { FSWatcher } from "fs";
+
+export { CustomNodeModule };
 
 export interface WatcherOptions {
     delay?:number;
@@ -13,9 +15,9 @@ export interface WatcherOptions {
 }
 
 export interface WatcherCallback {
-    add?:NodeModule[];
-    change?:NodeModule[];
-    unlink?:NodeModule[];
+    add?:CustomNodeModule[];
+    change?:CustomNodeModule[];
+    unlink?:CustomNodeModule[];
 }
 
 export class WatcherRequire extends CustomRequire {
@@ -23,12 +25,17 @@ export class WatcherRequire extends CustomRequire {
     _watcherCallback:(changes:WatcherCallback)=>void;
     _watcherTimeout:NodeJS.Timer = null;
     _watcher:FSWatcher;
-    _watcherList:{[file:string]: NodeModule} = {};
-    _watcherDelayed:{[type:string]: NodeModule[]} = {};
+    _watcherList:{[file:string]: CustomNodeModule} = {};
+    _watcherDelayed:{[type:string]: CustomNodeModule[]} = {};
     constructor(callback:(changes?:WatcherCallback)=>void, options?:WatcherOptions) {
-        super((mod:NodeModule) => {
+        super((mod:CustomNodeModule) => {
             this._watcherList[mod.filename] = mod;
             this._watcher.add(mod.filename);
+        }, (modlist:CustomNodeModule[]) => {
+            for (let mod of modlist) {
+                delete this._watcherList[mod.filename];
+                this._watcher.unwatch(mod.filename);
+            }
         });
         if (!options) {
             options = {

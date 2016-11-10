@@ -13,6 +13,12 @@ var WatcherRequire = (function (_super) {
         _super.call(this, function (mod) {
             _this._watcherList[mod.filename] = mod;
             _this._watcher.add(mod.filename);
+        }, function (modlist) {
+            for (var _i = 0, modlist_1 = modlist; _i < modlist_1.length; _i++) {
+                var mod = modlist_1[_i];
+                delete _this._watcherList[mod.filename];
+                _this._watcher.unwatch(mod.filename);
+            }
         });
         this._watcherTimeout = null;
         this._watcherList = {};

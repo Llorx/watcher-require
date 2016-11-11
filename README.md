@@ -2,6 +2,10 @@
 
 With this module you will receive a callback when a module or its dependencies are modified.
 
+To receive a callback for any non-native dependecies an specific module loads, see https://github.com/Llorx/custom-require
+
+To always receive an updated version of your modules, checking files and dependencies modifications,see https://github.com/Llorx/updated-require
+
 ## Installation
 
 `npm install watcher-require`

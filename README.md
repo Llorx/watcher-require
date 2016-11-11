@@ -6,13 +6,13 @@ With this module you will receive a callback when a module or its dependencies a
 
 To receive a callback for any non-native dependecies an specific module loads, see https://github.com/Llorx/custom-require
 
-To always receive an updated version of your modules, checking files and dependencies modifications,see https://github.com/Llorx/updated-require
+To always receive an updated version of your modules, checking files and dependencies modifications, see https://github.com/Llorx/updated-require
 
 ## Installation
 
 `npm install watcher-require`
 
-If you want a lightweight installation, but less consistent as uses nodejs `fs.watch()` instead of `chokidar` library, install with:
+If you want a lightweight installation, but [less consistent](https://nodejs.org/docs/latest/api/fs.html#fs_fs_watch_filename_options_listener) as uses nodejs `fs.watch()` instead of `chokidar` library, install with:
 
 `npm install watcher-require --no-optional`
 

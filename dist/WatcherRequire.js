@@ -5,7 +5,105 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 var custom_require_1 = require("custom-require");
-var chokidar = require("chokidar");
+var fs = require("fs");
+var chokidar;
+try {
+    chokidar = require("chokidar");
+}
+catch (e) {
+}
+var Watcher = (function () {
+    function Watcher(options) {
+        this.watchers = {};
+        this._events = {};
+        this.timeouts = {};
+        if (!options) {
+            options = {};
+        }
+        if (chokidar) {
+            this.watcher = chokidar.watch([], {
+                persistent: options.persistent
+            });
+        }
+        else {
+            this.options = options;
+        }
+    }
+    Watcher.prototype.call = function (event, filename) {
+        var _this = this;
+        clearTimeout(this.timeouts[filename]);
+        this.timeouts[filename] = setTimeout(function () {
+            delete _this.timeouts[filename];
+            if (_this._events[event]) {
+                for (var _i = 0, _a = _this._events[event]; _i < _a.length; _i++) {
+                    var callback = _a[_i];
+                    callback(filename);
+                }
+            }
+        }, 50);
+    };
+    Watcher.prototype.checkFile = function (filename) {
+        if (fs.existsSync(filename)) {
+            this.call("change", filename);
+        }
+        else {
+            this.call("unlink", filename);
+        }
+    };
+    Watcher.prototype.add = function (filename) {
+        if (this.watcher) {
+            this.watcher.add(filename);
+        }
+        else {
+            filename = require.resolve(filename);
+            if (!this.watchers[filename]) {
+                this.call("add", filename);
+                this.watchers[filename] = fs.watch(filename, {
+                    persistent: this.options.persistent
+                }, this.checkFile.bind(this, filename));
+            }
+        }
+    };
+    Watcher.prototype.unwatch = function (filename) {
+        if (this.watcher) {
+            this.watcher.unwatch(filename);
+        }
+        else {
+            filename = require.resolve(filename);
+            if (this.watchers[filename]) {
+                this.watchers[filename].close();
+                delete this.watchers[filename];
+            }
+        }
+    };
+    Watcher.prototype.on = function (event, callback) {
+        if (this.watcher) {
+            this.watcher.on(event, callback);
+        }
+        else {
+            if (!this._events[event]) {
+                this._events[event] = [];
+            }
+            this._events[event].push(callback);
+        }
+    };
+    Watcher.prototype.close = function () {
+        if (this.watcher) {
+            this.watcher.close();
+        }
+        else {
+            for (var i in this.watchers) {
+                if (this.watchers.hasOwnProperty(i)) {
+                    this.watchers[i].close();
+                }
+            }
+            this.watchers = {};
+            this._events = {};
+        }
+    };
+    return Watcher;
+}());
+exports.Watcher = Watcher;
 var WatcherRequire = (function (_super) {
     __extends(WatcherRequire, _super);
     function WatcherRequire(callback, options) {
@@ -44,9 +142,7 @@ var WatcherRequire = (function (_super) {
                 unlink: true
             };
         }
-        this._watcher = chokidar.watch([], {
-            persistent: options.persistent
-        });
+        this._watcher = new Watcher(options);
         for (var i in options.methods) {
             if (options.methods.hasOwnProperty(i) && options.methods[i]) {
                 this._watcherDelayed[i] = [];

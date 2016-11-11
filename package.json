@@ -13,11 +13,12 @@
     "build-ts": "tsc"
   },
   "devDependencies": {
-    "@types/node": "^6.0.46",
-    "@types/chokidar": "^1.4.29"
+    "@types/node": "^6.0.46"
+  },
+  "optionalDependencies": {
+    "chokidar": "^1.6.1"
   },
   "dependencies": {
-    "chokidar": "^1.6.1",
     "custom-require": "^0.1.7"
   },
   "description": "Require a module and receive a callback each time the module or one of his dependencies has been modified",

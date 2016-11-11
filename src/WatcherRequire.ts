@@ -1,6 +1,98 @@
 import { CustomRequire, CustomNodeModule } from "custom-require";
-import * as chokidar from "chokidar";
-import { FSWatcher } from "fs";
+
+import * as fs from "fs";
+
+var chokidar;
+try {
+    chokidar = require("chokidar");
+} catch (e) {
+}
+
+
+export class Watcher {
+    watcher:fs.FSWatcher;
+    watchers:{[file:string]:fs.FSWatcher} = {};
+    _events:{[event:string]:Function[]} = {};
+    options:WatcherOptions;
+    timeouts:{[filename:string]:any} = {};
+    constructor(options?:WatcherOptions) {
+        if (!options) {
+            options = {};
+        }
+        if (chokidar) {
+            this.watcher = chokidar.watch([], {
+                persistent: options.persistent
+            });
+        } else {
+            this.options = options;
+        }
+    }
+    call(event:string, filename:string) {
+        clearTimeout(this.timeouts[filename]);
+        this.timeouts[filename] = setTimeout(() => {
+            delete this.timeouts[filename];
+            if (this._events[event]) {
+                for(let callback of this._events[event]) {
+                    callback(filename);
+                }
+            }
+        }, 50);
+    }
+    checkFile(filename:string) {
+        if (fs.existsSync(filename)) {
+            this.call("change", filename);
+        } else {
+            this.call("unlink", filename);
+        }
+    }
+    add(filename:string) {
+        if (this.watcher) {
+            this.watcher.add(filename);
+        } else {
+            filename = require.resolve(filename);
+            if (!this.watchers[filename]) {
+                this.call("add", filename);
+                this.watchers[filename] = fs.watch(filename, {
+                    persistent: this.options.persistent
+                }, this.checkFile.bind(this, filename));
+            }
+        }
+    }
+    unwatch(filename:string) {
+        if (this.watcher) {
+            this.watcher.unwatch(filename);
+        } else {
+            filename = require.resolve(filename);
+            if (this.watchers[filename]) {
+                this.watchers[filename].close();
+                delete this.watchers[filename];
+            }
+        }
+    }
+    on(event:string, callback:Function) {
+        if (this.watcher) {
+            this.watcher.on(event, callback);
+        } else {
+            if (!this._events[event]) {
+                this._events[event] = [];
+            }
+            this._events[event].push(callback);
+        }
+    }
+    close() {
+        if (this.watcher) {
+            this.watcher.close();
+        } else {
+            for (var i in this.watchers) {
+                if (this.watchers.hasOwnProperty(i)) {
+                    this.watchers[i].close();
+                }
+            }
+            this.watchers = {};
+            this._events = {};
+        }
+    }
+}
 
 export { CustomNodeModule };
 
@@ -24,7 +116,7 @@ export class WatcherRequire extends CustomRequire {
     _watcherOptions:WatcherOptions;
     _watcherCallback:(changes:WatcherCallback)=>void;
     _watcherTimeout:NodeJS.Timer = null;
-    _watcher:FSWatcher;
+    _watcher:Watcher;
     _watcherList:{[file:string]: CustomNodeModule} = {};
     _watcherDelayed:{[type:string]: string[]} = {};
     constructor(callback:(changes?:WatcherCallback)=>void, options?:WatcherOptions) {
@@ -58,9 +150,7 @@ export class WatcherRequire extends CustomRequire {
                 unlink: true
             }
         }
-        this._watcher = chokidar.watch([], {
-            persistent: options.persistent
-        });
+        this._watcher = new Watcher(options);
         for (var i in options.methods) {
             if (options.methods.hasOwnProperty(i) && options.methods[i]) {
                 this._watcherDelayed[i] = [];

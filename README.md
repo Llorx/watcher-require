@@ -12,6 +12,10 @@ To always receive an updated version of your modules, checking files and depende
 
 `npm install watcher-require`
 
+If you want a lightweight installation, but less consistent as uses nodejs `fs.watch()` instead of `chokidar` library, install with:
+
+`npm install watcher-require --no-optional`
+
 ## Usage
 
 ```js

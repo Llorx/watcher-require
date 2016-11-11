@@ -1,6 +1,6 @@
 # Watcher Require
 
-[![npm](https://img.shields.io/npm/v/npm.svg)]([![npm](https://img.shields.io/npm/dm/localeval.svg)](https://www.npmjs.com/package/watcher-require)) [![npm](https://img.shields.io/npm/dm/localeval.svg)](https://www.npmjs.com/package/watcher-require)
+[![npm](https://img.shields.io/npm/v/watcher-require.svg)](https://www.npmjs.com/package/watcher-require) [![npm](https://img.shields.io/npm/dm/watcher-require.svg)](https://www.npmjs.com/package/watcher-require)
 
 With this module you will receive a callback when a module or its dependencies are modified.
 

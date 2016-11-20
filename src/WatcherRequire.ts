@@ -1,4 +1,4 @@
-import { CustomRequire, CustomNodeModule } from "custom-require";
+import { CustomRequire } from "custom-require";
 
 import * as fs from "fs";
 
@@ -94,8 +94,6 @@ export class Watcher {
     }
 }
 
-export { CustomNodeModule };
-
 export interface WatcherOptions {
     delay?:number;
     persistent?:boolean;
@@ -107,9 +105,9 @@ export interface WatcherOptions {
 }
 
 export interface WatcherCallback {
-    add?:CustomNodeModule[];
-    change?:CustomNodeModule[];
-    unlink?:CustomNodeModule[];
+    add?:NodeModule[];
+    change?:NodeModule[];
+    unlink?:NodeModule[];
 }
 
 export class WatcherRequire extends CustomRequire {
@@ -117,13 +115,13 @@ export class WatcherRequire extends CustomRequire {
     _watcherCallback:(changes:WatcherCallback)=>void;
     _watcherTimeout:NodeJS.Timer = null;
     _watcher:Watcher;
-    _watcherList:{[file:string]: CustomNodeModule} = {};
+    _watcherList:{[file:string]: NodeModule} = {};
     _watcherDelayed:{[type:string]: string[]} = {};
     constructor(callback:(changes?:WatcherCallback)=>void, options?:WatcherOptions) {
-        super((mod:CustomNodeModule) => {
+        super((mod:NodeModule) => {
             this._watcherList[mod.filename] = mod;
             this._watcher.add(mod.filename);
-        }, (modlist:CustomNodeModule[]) => {
+        }, (modlist:NodeModule[]) => {
             for (let mod of modlist) {
                 delete this._watcherList[mod.filename];
                 this._watcher.unwatch(mod.filename);

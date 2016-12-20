@@ -1,4 +1,6 @@
-import { CustomRequire } from "custom-require";
+import { CustomRequire, CustomNodeModule } from "custom-require";
+
+export { CustomNodeModule };
 
 import * as fs from "fs";
 
@@ -105,9 +107,9 @@ export interface WatcherOptions {
 }
 
 export interface WatcherCallback {
-    add?:NodeModule[];
-    change?:NodeModule[];
-    unlink?:NodeModule[];
+    add?:CustomNodeModule[];
+    change?:CustomNodeModule[];
+    unlink?:CustomNodeModule[];
 }
 
 export class WatcherRequire extends CustomRequire {
@@ -115,13 +117,13 @@ export class WatcherRequire extends CustomRequire {
     _watcherCallback:(changes:WatcherCallback)=>void;
     _watcherTimeout:NodeJS.Timer = null;
     _watcher:Watcher;
-    _watcherList:{[file:string]: NodeModule} = {};
+    _watcherList:{[file:string]: CustomNodeModule} = {};
     _watcherDelayed:{[type:string]: string[]} = {};
     constructor(callback:(changes?:WatcherCallback)=>void, options?:WatcherOptions) {
-        super((mod:NodeModule) => {
+        super((mod:CustomNodeModule) => {
             this._watcherList[mod.filename] = mod;
             this._watcher.add(mod.filename);
-        }, (modlist:NodeModule[]) => {
+        }, (modlist:CustomNodeModule[]) => {
             for (let mod of modlist) {
                 delete this._watcherList[mod.filename];
                 this._watcher.unwatch(mod.filename);
@@ -149,10 +151,10 @@ export class WatcherRequire extends CustomRequire {
             }
         }
         this._watcher = new Watcher(options);
-        for (var i in options.methods) {
-            if (options.methods.hasOwnProperty(i) && options.methods[i]) {
-                this._watcherDelayed[i] = [];
-                this._watcher.on(i, this._watcherNotify.bind(this, i));
+        for (let method in options.methods) {
+            if (options.methods.hasOwnProperty(method) && options.methods[method]) {
+                this._watcherDelayed[method] = [];
+                this._watcher.on(method, this._watcherNotify.bind(this, method));
             }
         }
         this._watcherOptions = options;
@@ -166,13 +168,13 @@ export class WatcherRequire extends CustomRequire {
             this._watcherTimeout = setTimeout(() => {
                 this._watcherTimeout = null;
                 var callback:WatcherCallback = {};
-                for (var i in this._watcherOptions.methods) {
-                    if (this._watcherOptions.methods.hasOwnProperty(i) && this._watcherOptions.methods[i]) {
-                        callback[i] = this._watcherDelayed[i];
-                        for (let ii = 0; ii < callback[i].length; ii++) {
-                            callback[i][ii] = this._watcherList[callback[i][ii]];
+                for (let method in this._watcherOptions.methods) {
+                    if (this._watcherOptions.methods.hasOwnProperty(method) && this._watcherOptions.methods[method]) {
+                        callback[method] = this._watcherDelayed[method];
+                        for (let i = 0; i < callback[method].length; i++) {
+                            callback[method][i] = this._watcherList[callback[method][i]];
                         }
-                        this._watcherDelayed[i] = [];
+                        this._watcherDelayed[method] = [];
                     }
                 }
                 this._watcherCallback(callback);

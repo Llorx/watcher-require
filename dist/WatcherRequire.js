@@ -143,10 +143,10 @@ var WatcherRequire = (function (_super) {
             };
         }
         this._watcher = new Watcher(options);
-        for (var i in options.methods) {
-            if (options.methods.hasOwnProperty(i) && options.methods[i]) {
-                this._watcherDelayed[i] = [];
-                this._watcher.on(i, this._watcherNotify.bind(this, i));
+        for (var method in options.methods) {
+            if (options.methods.hasOwnProperty(method) && options.methods[method]) {
+                this._watcherDelayed[method] = [];
+                this._watcher.on(method, this._watcherNotify.bind(this, method));
             }
         }
         this._watcherOptions = options;
@@ -161,13 +161,13 @@ var WatcherRequire = (function (_super) {
             this._watcherTimeout = setTimeout(function () {
                 _this._watcherTimeout = null;
                 var callback = {};
-                for (var i in _this._watcherOptions.methods) {
-                    if (_this._watcherOptions.methods.hasOwnProperty(i) && _this._watcherOptions.methods[i]) {
-                        callback[i] = _this._watcherDelayed[i];
-                        for (var ii = 0; ii < callback[i].length; ii++) {
-                            callback[i][ii] = _this._watcherList[callback[i][ii]];
+                for (var method_1 in _this._watcherOptions.methods) {
+                    if (_this._watcherOptions.methods.hasOwnProperty(method_1) && _this._watcherOptions.methods[method_1]) {
+                        callback[method_1] = _this._watcherDelayed[method_1];
+                        for (var i = 0; i < callback[method_1].length; i++) {
+                            callback[method_1][i] = _this._watcherList[callback[method_1][i]];
                         }
-                        _this._watcherDelayed[i] = [];
+                        _this._watcherDelayed[method_1] = [];
                     }
                 }
                 _this._watcherCallback(callback);

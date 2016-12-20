@@ -1,6 +1,7 @@
 /// <reference types="node" />
 /// <reference types="chokidar" />
-import { CustomRequire } from "custom-require";
+import { CustomRequire, CustomNodeModule } from "custom-require";
+export { CustomNodeModule };
 import * as fs from "fs";
 export declare class Watcher {
     watcher: fs.FSWatcher;
@@ -32,9 +33,9 @@ export interface WatcherOptions {
     };
 }
 export interface WatcherCallback {
-    add?: NodeModule[];
-    change?: NodeModule[];
-    unlink?: NodeModule[];
+    add?: CustomNodeModule[];
+    change?: CustomNodeModule[];
+    unlink?: CustomNodeModule[];
 }
 export declare class WatcherRequire extends CustomRequire {
     _watcherOptions: WatcherOptions;
@@ -42,7 +43,7 @@ export declare class WatcherRequire extends CustomRequire {
     _watcherTimeout: NodeJS.Timer;
     _watcher: Watcher;
     _watcherList: {
-        [file: string]: NodeModule;
+        [file: string]: CustomNodeModule;
     };
     _watcherDelayed: {
         [type: string]: string[];
